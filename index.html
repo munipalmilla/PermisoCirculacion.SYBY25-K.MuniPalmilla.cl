@@ -1,1 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALIDACIÓN DE DOCUMENTOS TRIBUTARIOS - ILUSTRE MUNICIPALIDAD DE PALMILLA</title>
+    
+    <script>
+        const CONFIG = {
+            entidad: "I. MUNICIPALIDAD DE PALMILLA",
+            departamento: "DIRECCIÓN DE TRÁNSITO Y TRANSPORTE PÚBLICO",
+            estado: "DOCUMENTO / VALIDO", 
+            documento: "PERMISO DE CIRCULACIÓN 2025",
+            emision: "04-03-2025",
+            folio: "PAL-2025-8840",
+            patente: "SYBY25-K",
+            propietario: "EL ALERO S.A.",
+            vehiculo: "FORD MUSTANG MACH 1 5.0 AUT",
+            vencimiento: "31-03-2026",
+            montoTotal: "$1.415.012",
+            tiempoCarga: 2500 
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gob-navy: #0033a0; /* Azul Gobierno de Chile */
+            --gob-red: #d52b1e;
+            --soft-gray: #f8f9fa;
+            --border-gray: #ced4da;
+            --text-dark: #212529;
+        }
 
+        body, html {
+            margin: 0; padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #e9ecef;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+
+        /* --- PANTALLA DE CARGA SOBRIA --- */
+        #loader {
+            position: fixed; inset: 0;
+            background: #ffffff;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+        }
+
+        .loader-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--gob-navy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* --- DOCUMENTO OFICIAL --- */
+        .doc-container {
+            background: white;
+            width: 95%; max-width: 550px;
+            border: 1px solid var(--border-gray);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none; /* Activado por JS */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sello de agua sutil de fondo */
+        .doc-container::before {
+            content: "MUNICIPALIDAD DE PALMILLA";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 3rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.03);
+            white-space: nowrap;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .gov-header {
+            background-color: var(--gob-navy);
+            height: 8px;
+            width: 100%;
+        }
+
+        .header-content {
+            padding: 25px;
+            border-bottom: 2px solid var(--soft-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-text {
+            border-left: 3px solid var(--gob-red);
+            padding-left: 12px;
+        }
+
+        .brand-text h1 {
+            font-size: 0.95rem; margin: 0; font-weight: 800; color: var(--gob-navy);
+            letter-spacing: 0.5px;
+        }
+        .brand-text p { font-size: 0.7rem; margin: 2px 0 0 0; color: #666; }
+
+        .status-badge {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 2px;
+        }
+
+        .main-body { padding: 25px; position: relative; z-index: 1; }
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gob-navy);
+            text-transform: uppercase;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            padding-bottom: 4px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 4px;
+        }
+
+        .label { font-size: 0.75rem; color: #777; font-weight: 400; }
+        .value { font-size: 0.9rem; color: #000; font-weight: 600; text-align: right; }
+
+        /* Estilo para Patente */
+        #view-patente {
+            font-family: 'Courier New', monospace;
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .clock-container {
+            background-color: var(--soft-gray);
+            border: 1px solid var(--border-gray);
+            padding: 15px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .clock-label { font-size: 0.65rem; color: #666; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        #live-clock { font-size: 1rem; font-weight: 700; color: var(--gob-navy); }
+
+        .footer {
+            padding: 20px;
+            font-size: 0.65rem;
+            color: #888;
+            text-align: center;
+            line-height: 1.4;
+            background: #fff;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .value { font-size: 0.85rem; max-width: 60%; }
+            .brand-text h1 { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="loader-spinner"></div>
+        <p style="font-size: 0.75rem; color: #666; margin-top: 15px;">CONSULTANDO REGISTROS MUNICIPALES...</p>
+    </div>
+
+    <div class="doc-container" id="main-ui">
+        <div class="gov-header"></div>
+        
+        <header class="header-content">
+            <div class="brand-text">
+                <h1 id="view-entidad">---</h1>
+                <p id="view-dept">---</p>
+            </div>
+            <div class="status-badge" id="view-estado">--</div>
+        </header>
+
+        <main class="main-body">
+            <div class="section-title">Información del Documento</div>
+            <div class="info-grid">
+                <div class="info-item"><span class="label">Tipo de Documento:</span> <span class="value" id="view-doc">---</span></div>
+                <div class="info-item"><span class="label">Fecha Emisión:</span> <span class="value" id="view-emision">---</span></div>
+                <div class="info-item"><span class="label">NroFolio:</span> <span class="value" id="view-folio">---</span></div>
+            </div>
+
+            <div class="section-title">Datos del Vehículo y Propietario</div>
+            <div class="info-grid">
+                <div class="info-item"><span class="label">Titular:</span> <span class="value" id="view-propietario">---</span></div>
+                <div class="info-item"><span class="label">Patente (PPU):</span> <span class="value" id="view-patente">---</span></div>
+                <div class="info-item"><span class="label">Modelo:</span> <span class="value" id="view-vehiculo">---</span></div>
+                <div class="info-item"><span class="label">Vencimiento:</span> <span class="value" id="view-venc" style="color: var(--gob-red);">---</span></div>
+                <div class="info-item" style="border: none;"><span class="label">Monto Total Pagado:</span> <span class="value" id="view-monto" style="font-size: 1.1rem; color: var(--gob-navy);">---</span></div>
+            </div>
+
+            <div class="clock-container">
+                <span class="clock-label">Fecha y Hora de Consulta Local</span>
+                <div id="live-clock">--/--/---- 00:00:00</div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            Documento electrónico validado por el sistema de interoperabilidad municipal.<br>
+            Ley Nº 19.799 sobre Documentos Electrónicos, Firma Electrónica y Servicios de Certificación.<br>
+            <strong>ID de Seguridad: PLM-992-X25</strong>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carga de datos
+            document.getElementById('view-entidad').textContent = CONFIG.entidad;
+            document.getElementById('view-dept').textContent = CONFIG.departamento;
+            document.getElementById('view-estado').textContent = CONFIG.estado;
+            document.getElementById('view-doc').textContent = CONFIG.documento;
+            document.getElementById('view-emision').textContent = CONFIG.emision;
+            document.getElementById('view-folio').textContent = CONFIG.folio;
+            document.getElementById('view-propietario').textContent = CONFIG.propietario;
+            document.getElementById('view-patente').textContent = CONFIG.patente;
+            document.getElementById('view-vehiculo').textContent = CONFIG.vehiculo;
+            document.getElementById('view-venc').textContent = CONFIG.vencimiento;
+            document.getElementById('view-monto').textContent = CONFIG.montoTotal;
+
+            // Reloj oficial
+            function updateClock() {
+                const now = new Date();
+                const d = String(now.getDate()).padStart(2, '0');
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const a = now.getFullYear();
+                const timeString = `${d}-${m}-${a} ${now.toLocaleTimeString()}`;
+                document.getElementById('live-clock').textContent = timeString;
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Quitar loader
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('main-ui').style.display = 'block';
+                }, 400);
+            }, CONFIG.tiempoCarga);
+        });
+    </script>
+</body>
+</html>
